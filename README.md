@@ -2,6 +2,10 @@
 
 > Mini enterprise knowledge search engine with hybrid BM25 + dense retrieval over GitHub and Notion. Built to demonstrate production search architecture.
 
+**Live demo:** [nexus-search-seven.vercel.app](https://nexus-search-seven.vercel.app) — backend on Render's free tier, so the first query after idle can take 30-50s to cold-start.
+
+The demo is seeded with a small synthetic corpus (8 docs: GitHub issues/PRs and Notion pages from a fictional `acme/backend` repo) rather than a live GitHub/Notion connection, so it's reproducible without handing out API tokens. Try queries like *"retry logic with exponential backoff"*, *"database migration rollback"*, or *"connection pool exhaustion"*.
+
 ## What it does
 
 NexusSearch ingests documents from GitHub (issues, pull requests, markdown files) and Notion pages, normalizes them into a unified schema, splits them into overlapping chunks, and embeds each chunk using a local sentence-transformer model. Embeddings are stored in PostgreSQL via the pgvector extension alongside the raw chunk text and metadata.
@@ -46,20 +50,22 @@ GitHub / Notion
 
 ## Eval results
 
-Run `python -m nexus.eval` to populate.
+Run against the seeded demo corpus (8 docs, 7 hand-labeled queries in `eval/synthetic_queries.json`) via `python -m eval`:
 
 | Retriever    | MRR       | NDCG@5     |
 |--------------|-----------|------------|
-| Hybrid (RRF) | ---       | ---        |
-| BM25 only    | ---       | ---        |
-| Dense only   | ---       | ---        |
+| Hybrid (RRF) | 1.000     | 1.000      |
+| BM25 only    | 1.000     | 1.000      |
+| Dense only   | 1.000     | 1.000      |
+
+All three retrievers hit perfect scores here because the demo corpus is tiny and each query has one lexically-and-semantically distinct correct answer — it confirms the retrieval pipeline is wired correctly end-to-end, not that RRF beats its components. The value of hybrid fusion (BM25 catching exact identifiers/error codes that embeddings miss, dense search catching paraphrases that BM25 misses) shows up at corpus sizes where queries have multiple plausible-but-wrong matches; see [Design decisions](#rrf-vs-linear-score-combination) below for why RRF was chosen over a tuned linear blend regardless of scale.
 
 ## Quickstart
 
 **Prerequisites:** Python 3.11+, Docker
 
 ```bash
-git clone <repo>
+git clone https://github.com/megradhikan/nexus-search.git
 cd nexus-search
 cp .env.example .env          # fill in GITHUB_TOKEN, NOTION_TOKEN
 docker-compose up -d
@@ -75,7 +81,17 @@ uvicorn api.main:app --reload
 cd ui && npm install && npm run dev
 ```
 
-The UI proxies API calls to `localhost:8000`. Run the FastAPI server first.
+The UI proxies API calls to `localhost:8000` in dev. In production, point it at a deployed API with `VITE_API_URL` (see below).
+
+## Deployment
+
+The live demo runs on two free-tier services, deployed straight from this repo:
+
+- **API** ([Render](https://render.com), see [`render.yaml`](render.yaml)): builds a CPU-only torch wheel (keeps the image well under the free plan's memory ceiling), then on each start runs migrations, re-seeds the demo corpus (idempotent — `ON CONFLICT` upserts), and boots `uvicorn`. `NEXUS_DISABLE_SCHEDULER=1` turns off the connector-polling scheduler, since there are no live GitHub/Notion tokens configured for the public demo.
+- **UI** ([Vercel](https://vercel.com)): static Vite build, with `VITE_API_URL` set at build time to the Render API's URL.
+- **Database**: Render Postgres with the `pgvector` extension, provisioned via the same blueprint.
+
+To deploy your own copy: push to your fork, connect it in the Render dashboard ("New > Blueprint", pick your fork — it reads `render.yaml` automatically), then `cd ui && vercel --prod -b VITE_API_URL=<your-render-url>`.
 
 ## API reference
 
