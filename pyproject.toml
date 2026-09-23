@@ -1,0 +1,42 @@
+[project]
+name = "nexus-search"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "psycopg2-binary",
+    "pgvector",
+    "sentence-transformers",
+    "rank-bm25",
+    "langchain-text-splitters",
+    "tiktoken",
+    "nltk",
+    "PyGithub",
+    "notion-client",
+    "apscheduler",
+    "sqlalchemy",
+    "tenacity",
+    "python-dotenv",
+    "httpx",
+    "numpy",
+    "scikit-learn",
+    "pydantic-settings",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

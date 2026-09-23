@@ -1,0 +1,25 @@
+{
+  "_note": "doc_ids match the corpus loaded by seed_demo.py",
+  "retry logic with exponential backoff": [
+    "github::issue::acme/backend::issue::101",
+    "github::pull_request::acme/backend::pr::204"
+  ],
+  "database migration rollback": [
+    "github::issue::acme/backend::issue::87"
+  ],
+  "API rate limiting strategy": [
+    "notion::notion_page::notion-page-api-rate-limit"
+  ],
+  "authentication token expiry": [
+    "notion::notion_page::notion-page-auth-001"
+  ],
+  "error handling in async code": [
+    "github::markdown_file::acme/backend::md::docs/async-errors.md"
+  ],
+  "connection pool exhaustion": [
+    "github::issue::acme/backend::issue::142"
+  ],
+  "new engineer onboarding checklist": [
+    "notion::notion_page::notion-page-onboarding"
+  ]
+}

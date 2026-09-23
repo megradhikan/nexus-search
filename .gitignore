@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Env
+.env
+
+# Local artifacts
+bm25_index.pkl
+
+# Node
+ui/node_modules/
+ui/dist/
+
+# OS
+.DS_Store
+
+# Personal notes (never pushed)
+NOTES-*.md
